@@ -46,18 +46,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_create_integer_array() {
-        let v = create_integer_array(3);
-        assert_eq!(vec![0, 1, 2, 3], v)
-    }
-
-    #[test]
-    fn test_odd() {
-        assert_eq!(odd(1), true);
-        assert_eq!(odd(2), false);
-    }
-
-    #[test]
     fn test_permutations_char() {
         let mut a = vec!['a', 'b', 'c'];
         permutations(&mut a);
