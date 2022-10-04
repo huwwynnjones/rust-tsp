@@ -28,6 +28,7 @@ impl<T: Clone> Iterator for Permutations<T> {
 
     // quickperm see https://www.baeldung.com/cs/array-generate-all-permutations
     // and https://www.quickperm.org/
+    // adapted a bit to be iterable
     fn next(&mut self) -> Option<Self::Item> {
         if self.initial_call {
             self.initial_call = false;

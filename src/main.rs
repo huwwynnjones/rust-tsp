@@ -1,44 +1,38 @@
 mod permutation;
 
+use std::vec;
+
 use crate::permutation::Permutations;
 
 fn main() {
-    //let result = permutations(&mut vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
-    //let result = permutations(&mut vec![1, 2, 3]);
-    //println!("{:?}", result);
-    let a = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-    let perm = Permutations::new(&a);
-    println!("{}", perm.count());
-}
-
-// quickperm see https://www.baeldung.com/cs/array-generate-all-permutations
-// and https://www.quickperm.org/
-fn permutations<T: Clone>(a: &mut [T]) -> Vec<Vec<T>> {
-    let mut result = Vec::new();
-    let n = a.len();
-    let mut p = create_integer_array(n);
-    result.push(a.to_vec());
-    let mut i = 1;
-    while i < n {
-        p[i] -= 1;
-        let j = if odd(i) { p[i] } else { 0 };
-        a.swap(j, i);
-        result.push(a.to_vec());
-        i = 1;
-        while p[i] == 0 {
-            p[i] = i;
-            i += 1;
+    let costs = vec![vec![0, 20, 30], vec![20, 0, 40], vec![30, 40, 0]];
+    let a = (1..4).collect::<Vec<_>>();
+    let p = Permutations::new(&a);
+    let mut journeys = Vec::new();
+    let mut cost = i32::MAX;
+    for j in p {
+        let current_cost = calculate_cost(&j, &costs);
+        if current_cost < cost {
+            journeys.clear();
+            journeys.push(j);
+            cost = current_cost;
+        } else if current_cost == cost {
+            journeys.push(j)
         }
     }
-    result
+    println!("Lowest cost {}, journeys {:?}", cost, journeys);
 }
 
-fn create_integer_array(length: usize) -> Vec<usize> {
-    (0..length + 1).collect::<Vec<usize>>()
-}
-
-fn odd(n: usize) -> bool {
-    n % 2 != 0
+fn calculate_cost(journey: &[i32], costs: &Vec<Vec<i32>>) -> i32 {
+    let mut cost = 0;
+    for (idx, city) in journey.iter().enumerate() {
+        let start = (city - 1) as usize;
+        if idx < (journey.len() - 1) {
+            let end = (journey[idx + 1] - 1) as usize;
+            cost += costs[start][end];
+        }
+    }
+    cost
 }
 
 #[cfg(test)]
@@ -46,26 +40,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_permutations_char() {
-        let mut a = vec!['a', 'b', 'c'];
-        permutations(&mut a);
-        println!("{:?}", a);
-        //assert_eq!(permutations(&mut a), vec![vec![]])
-    }
-
-    #[test]
-    fn test_permutations_int() {
-        let mut a = vec![1, 2, 3];
-        assert_eq!(
-            permutations(&mut a),
-            vec![
-                vec![1, 2, 3],
-                vec![2, 1, 3],
-                vec![3, 1, 2],
-                vec![1, 3, 2],
-                vec![2, 3, 1],
-                vec![3, 2, 1]
-            ]
-        )
+    fn test_calculate_cost() {
+        let journey = vec![1, 2, 3];
+        let costs = vec![vec![0, 20, 30], vec![20, 0, 40], vec![30, 40, 0]];
+        assert_eq!(calculate_cost(&journey, &costs), 20 + 40);
+        let journey = vec![2, 1, 3];
+        assert_eq!(calculate_cost(&journey, &costs), 20 + 30);
     }
 }
