@@ -16,24 +16,24 @@ fn main() {
         costs.insert(map_input.0, map_input.1);
     }
 
-    let cities = vec!["A", "B", "C"];
+    let cities = cities_from_city_keys(&costs); 
     let permutations = Permutations::new(&cities);
-    let mut journeys = Vec::new();
-    let mut cost = i32::MAX;
+    let mut cheapest_journeys = Vec::new();
+    let mut lowest_cost = i32::MAX;
     for journey in permutations {
         let city_pairs = journey_to_city_pairs(&journey);
         let current_cost = calculate_cost(&city_pairs, &costs);
-        match current_cost.cmp(&cost) {
+        match current_cost.cmp(&lowest_cost) {
             Ordering::Less => {
-                journeys.clear();
-                journeys.push(journey);
-                cost = current_cost
+                cheapest_journeys.clear();
+                cheapest_journeys.push(journey);
+                lowest_cost = current_cost
             }
-            Ordering::Equal => journeys.push(journey),
+            Ordering::Equal => cheapest_journeys.push(journey),
             _ => (),
         }
     }
-    println!("Lowest cost {}, journeys {:?}", cost, journeys);
+    println!("Lowest cost {}, journeys {:?}", lowest_cost, cheapest_journeys);
 }
 
 #[derive(Hash, PartialEq, Eq, Debug)]
@@ -63,6 +63,14 @@ impl CityKey {
             end: self.start.clone(),
         }
     }
+}
+
+fn cities_from_city_keys<'a>(costs: &'a HashMap<CityKey, i32>) -> Vec<&'a str> {
+    let city_keys = costs.keys().collect::<Vec<&CityKey>>();
+    let mut cities = city_keys.iter().map(|k| [k.start.as_str(), k.end.as_str()]).flatten().collect::<Vec<&str>>();
+    cities.sort();
+    cities.dedup();
+    cities
 }
 
 fn journey_to_city_pairs<'a>(journey: &[&'a str]) -> Vec<[&'a str; 2]> {
@@ -118,6 +126,15 @@ mod tests {
         costs.insert(CityKey::new("B", "C"), 50);
         let city_pairs = vec![["A", "B"], ["B", "C"]];
         assert_eq!(calculate_cost(&city_pairs, &costs), 80)
+    }
+
+    #[test]
+    fn test_cities_from_city_keys() {
+        let mut costs = HashMap::new();
+        costs.insert(CityKey::new("A", "B"), 30);
+        costs.insert(CityKey::new("B", "C"), 50);
+        let correct_result = vec!["A", "B", "C"];
+        assert_eq!(cities_from_city_keys(&costs), correct_result)
     }
 
     #[test]
