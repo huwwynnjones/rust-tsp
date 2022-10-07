@@ -3,6 +3,8 @@ mod permutation;
 use std::{
     cmp::Ordering,
     collections::{HashMap, VecDeque},
+    fs::File,
+    io::{BufRead, BufReader},
 };
 
 use crate::permutation::Permutations;
@@ -10,13 +12,15 @@ use crate::permutation::Permutations;
 fn main() {
     let mut costs = HashMap::new();
 
-    let cost_string = "A B 20\nA C 30\nB C 40\n";
-    for line in cost_string.lines() {
-        let map_input = string_to_map_entry(line);
+    let city_data = File::open("cities.txt").unwrap();
+    let buf_reader = BufReader::new(city_data);
+
+    for line in buf_reader.lines() {
+        let map_input = string_to_map_entry(&line.unwrap());
         costs.insert(map_input.0, map_input.1);
     }
 
-    let cities = cities_from_city_keys(&costs); 
+    let cities = cities_from_city_keys(&costs);
     let permutations = Permutations::new(&cities);
     let mut cheapest_journeys = Vec::new();
     let mut lowest_cost = i32::MAX;
@@ -33,7 +37,10 @@ fn main() {
             _ => (),
         }
     }
-    println!("Lowest cost {}, journeys {:?}", lowest_cost, cheapest_journeys);
+    println!(
+        "Lowest cost {}, journeys {:?}",
+        lowest_cost, cheapest_journeys
+    );
 }
 
 #[derive(Hash, PartialEq, Eq, Debug)]
@@ -67,20 +74,24 @@ impl CityKey {
 
 fn cities_from_city_keys<'a>(costs: &'a HashMap<CityKey, i32>) -> Vec<&'a str> {
     let city_keys = costs.keys().collect::<Vec<&CityKey>>();
-    let mut cities = city_keys.iter().map(|k| [k.start.as_str(), k.end.as_str()]).flatten().collect::<Vec<&str>>();
+    let mut cities = city_keys
+        .iter()
+        .map(|k| [k.start.as_str(), k.end.as_str()])
+        .flatten()
+        .collect::<Vec<&str>>();
     cities.sort();
     cities.dedup();
     cities
 }
 
 fn journey_to_city_pairs<'a>(journey: &[&'a str]) -> Vec<[&'a str; 2]> {
-    let mut vd = VecDeque::new();
-    vd.extend(journey);
+    let mut cities = VecDeque::new();
+    cities.extend(journey);
     let mut result = Vec::new();
 
-    while vd.len() > 1 {
-        let first = vd.pop_front().unwrap();
-        let second = vd.front().unwrap();
+    while cities.len() > 1 {
+        let first = cities.pop_front().unwrap();
+        let second = cities.front().unwrap();
         result.push([first, *second]);
     }
     result
