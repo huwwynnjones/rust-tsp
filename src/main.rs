@@ -10,15 +10,7 @@ use std::{
 use crate::permutation::Permutations;
 
 fn main() {
-    let mut costs = HashMap::new();
-
-    let city_data = File::open("cities.txt").unwrap();
-    let buf_reader = BufReader::new(city_data);
-
-    for line in buf_reader.lines() {
-        let map_input = string_to_map_entry(&line.unwrap());
-        costs.insert(map_input.0, map_input.1);
-    }
+    let costs = load_costs_from_file();
 
     let cities = cities_from_city_keys(&costs);
     let permutations = Permutations::new(&cities);
@@ -41,6 +33,19 @@ fn main() {
         "Lowest cost {}, journeys {:?}",
         lowest_cost, cheapest_journeys
     );
+}
+
+fn load_costs_from_file() -> HashMap<CityKey, i32> {
+    let mut costs = HashMap::new();
+
+    let city_data = File::open("cities.txt").unwrap();
+    let buf_reader = BufReader::new(city_data);
+
+    for line in buf_reader.lines() {
+        let map_input = string_to_map_entry(&line.unwrap());
+        costs.insert(map_input.0, map_input.1);
+    }
+    costs
 }
 
 #[derive(Hash, PartialEq, Eq, Debug)]
