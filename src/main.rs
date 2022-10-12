@@ -7,6 +7,8 @@ use std::{
     io::{BufRead, BufReader},
 };
 
+use internment::Intern;
+
 use crate::permutation::Permutations;
 
 fn main() {
@@ -50,29 +52,29 @@ fn load_costs_from_file() -> HashMap<CityKey, i32> {
 
 #[derive(Hash, PartialEq, Eq, Debug)]
 struct CityKey {
-    start: String,
-    end: String,
+    start: Intern<String>,
+    end: Intern<String>,
 }
 
 impl CityKey {
     fn new(start: &str, end: &str) -> Self {
         CityKey {
-            start: start.into(),
-            end: end.into(),
+            start: Intern::from_ref(start),
+            end: Intern::from_ref(end),
         }
     }
 
     fn from(city_pair: &[&str]) -> Self {
         CityKey {
-            start: city_pair[0].into(),
-            end: city_pair[1].into(),
+            start: Intern::from_ref(city_pair[0]),
+            end: Intern::from_ref(city_pair[1]),
         }
     }
 
     fn reverse_key(&mut self) -> Self {
         CityKey {
-            start: self.end.clone(),
-            end: self.start.clone(),
+            start: self.end,
+            end: self.start,
         }
     }
 }
