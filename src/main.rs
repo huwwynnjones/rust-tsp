@@ -58,17 +58,14 @@ struct CityKey {
 }
 
 impl CityKey {
-    fn new(start: &str, end: &str) -> Self {
-        CityKey {
-            start: Intern::from_ref(start),
-            end: Intern::from_ref(end),
-        }
+    fn new(start: Intern<String>, end: Intern<String>) -> Self {
+        CityKey { start, end }
     }
 
-    fn from(city_pair: &[&str]) -> Self {
+    fn from(city_pair: &[Intern<String>]) -> Self {
         CityKey {
-            start: Intern::from_ref(city_pair[0]),
-            end: Intern::from_ref(city_pair[1]),
+            start: city_pair[0],
+            end: city_pair[1],
         }
     }
 
@@ -80,19 +77,19 @@ impl CityKey {
     }
 }
 
-fn cities_from_city_keys<'a>(costs: &'a AHashMap<CityKey, i32>) -> Vec<&'a str> {
+fn cities_from_city_keys<'a>(costs: &'a AHashMap<CityKey, i32>) -> Vec<Intern<String>> {
     let city_keys = costs.keys().collect::<Vec<&CityKey>>();
     let mut cities = city_keys
         .iter()
-        .map(|k| [k.start.as_str(), k.end.as_str()])
+        .map(|k| [k.start, k.end])
         .flatten()
-        .collect::<Vec<&str>>();
+        .collect::<Vec<Intern<String>>>();
     cities.sort();
     cities.dedup();
     cities
 }
 
-fn journey_to_city_pairs<'a>(journey: &[&'a str]) -> Vec<[&'a str; 2]> {
+fn journey_to_city_pairs<'a>(journey: &[Intern<String>]) -> Vec<[Intern<String>; 2]> {
     let mut cities = VecDeque::new();
     cities.extend(journey);
     let mut result = Vec::new();
@@ -107,8 +104,10 @@ fn journey_to_city_pairs<'a>(journey: &[&'a str]) -> Vec<[&'a str; 2]> {
 
 fn string_to_map_entry(input: &str) -> (CityKey, i32) {
     let mut split = input.split_whitespace();
-    let start = split.next().expect("No start city");
-    let end = split.next().expect("No end city");
+    let s = split.next().expect("No start city");
+    let start = Intern::new(s.to_string());
+    let e = split.next().expect("No end city");
+    let end = Intern::new(e.to_string());
     let cost = split
         .next()
         .expect("No cost data")
@@ -118,7 +117,7 @@ fn string_to_map_entry(input: &str) -> (CityKey, i32) {
     (city_key, cost)
 }
 
-fn calculate_cost(city_pairs: &[[&str; 2]], costs: &AHashMap<CityKey, i32>) -> i32 {
+fn calculate_cost(city_pairs: &[[Intern<String>; 2]], costs: &AHashMap<CityKey, i32>) -> i32 {
     city_pairs
         .iter()
         .map(|p| {
@@ -141,24 +140,43 @@ mod tests {
     #[test]
     fn test_calculate_cost() {
         let mut costs = AHashMap::new();
-        costs.insert(CityKey::new("A", "B"), 30);
-        costs.insert(CityKey::new("B", "C"), 50);
-        let city_pairs = vec![["A", "B"], ["B", "C"]];
+        costs.insert(
+            CityKey::new(Intern::from_ref("A"), Intern::from_ref("B")),
+            30,
+        );
+        costs.insert(
+            CityKey::new(Intern::from_ref("B"), Intern::from_ref("C")),
+            50,
+        );
+        let city_pairs = vec![
+            [Intern::from_ref("A"), Intern::from_ref("B")],
+            [Intern::from_ref("B"), Intern::from_ref("C")],
+        ];
         assert_eq!(calculate_cost(&city_pairs, &costs), 80)
     }
 
     #[test]
     fn test_cities_from_city_keys() {
         let mut costs = AHashMap::new();
-        costs.insert(CityKey::new("A", "B"), 30);
-        costs.insert(CityKey::new("B", "C"), 50);
-        let correct_result = vec!["A", "B", "C"];
+        costs.insert(
+            CityKey::new(Intern::from_ref("A"), Intern::from_ref("B")),
+            30,
+        );
+        costs.insert(
+            CityKey::new(Intern::from_ref("B"), Intern::from_ref("C")),
+            50,
+        );
+        let correct_result = vec![
+            Intern::from_ref("A"),
+            Intern::from_ref("B"),
+            Intern::from_ref("C"),
+        ];
         assert_eq!(cities_from_city_keys(&costs), correct_result)
     }
 
     #[test]
     fn test_string_to_map_entry() {
-        let city_key = CityKey::new("A", "B");
+        let city_key = CityKey::new(Intern::from_ref("A"), Intern::from_ref("B"));
         let input = "A B 80";
         assert_eq!(string_to_map_entry(input), (city_key, 80))
     }
@@ -179,8 +197,19 @@ mod tests {
 
     #[test]
     fn test_journey_to_city_pairs_strings() {
-        let journey = vec!["A", "B", "C", "D", "E"];
-        let correct_result = vec![["A", "B"], ["B", "C"], ["C", "D"], ["D", "E"]];
+        let journey = vec![
+            Intern::from_ref("A"),
+            Intern::from_ref("B"),
+            Intern::from_ref("C"),
+            Intern::from_ref("D"),
+            Intern::from_ref("E"),
+        ];
+        let correct_result = vec![
+            [Intern::from_ref("A"), Intern::from_ref("B")],
+            [Intern::from_ref("B"), Intern::from_ref("C")],
+            [Intern::from_ref("C"), Intern::from_ref("D")],
+            [Intern::from_ref("D"), Intern::from_ref("E")],
+        ];
         assert_eq!(journey_to_city_pairs(&journey), correct_result)
     }
 }
