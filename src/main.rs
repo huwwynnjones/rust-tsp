@@ -1,3 +1,4 @@
+mod citykey;
 mod permutation;
 
 use std::{
@@ -10,15 +11,16 @@ use std::{
 use ahash::AHashMap;
 use internment::Intern;
 
+use crate::citykey::{cities_from_city_keys, CityKey};
 use crate::permutation::Permutations;
 
 fn main() {
     let costs = load_costs_from_file();
-
     let cities = cities_from_city_keys(&costs);
     let permutations = Permutations::new(&cities);
     let mut cheapest_journeys = Vec::new();
     let mut lowest_cost = i32::MAX;
+
     for journey in permutations {
         let city_pairs = journey_to_city_pairs(&journey);
         let current_cost = calculate_cost(&city_pairs, &costs);
@@ -32,6 +34,7 @@ fn main() {
             _ => (),
         }
     }
+
     println!(
         "Lowest cost {}, journeys {:?}",
         lowest_cost, cheapest_journeys
@@ -40,64 +43,24 @@ fn main() {
 
 fn load_costs_from_file() -> AHashMap<CityKey, i32> {
     let mut costs = AHashMap::new();
-
-    let city_data = File::open("cities.txt").unwrap();
+    let city_data = File::open("cities.txt").expect("Failed to open file");
     let buf_reader = BufReader::new(city_data);
-
-    for line in buf_reader.lines() {
-        let map_input = string_to_map_entry(&line.unwrap());
+    for line in buf_reader.lines().flatten() {
+        let map_input = string_to_map_entry(&line);
         costs.insert(map_input.0, map_input.1);
     }
     costs
 }
 
-#[derive(Hash, PartialEq, Eq, Debug)]
-struct CityKey {
-    start: Intern<String>,
-    end: Intern<String>,
-}
-
-impl CityKey {
-    fn new(start: Intern<String>, end: Intern<String>) -> Self {
-        CityKey { start, end }
-    }
-
-    fn from(city_pair: &[Intern<String>]) -> Self {
-        CityKey {
-            start: city_pair[0],
-            end: city_pair[1],
-        }
-    }
-
-    fn reverse_key(&mut self) -> Self {
-        CityKey {
-            start: self.end,
-            end: self.start,
-        }
-    }
-}
-
-fn cities_from_city_keys<'a>(costs: &'a AHashMap<CityKey, i32>) -> Vec<Intern<String>> {
-    let city_keys = costs.keys().collect::<Vec<&CityKey>>();
-    let mut cities = city_keys
-        .iter()
-        .map(|k| [k.start, k.end])
-        .flatten()
-        .collect::<Vec<Intern<String>>>();
-    cities.sort();
-    cities.dedup();
-    cities
-}
-
-fn journey_to_city_pairs<'a>(journey: &[Intern<String>]) -> Vec<[Intern<String>; 2]> {
+fn journey_to_city_pairs(journey: &[Intern<String>]) -> Vec<(Intern<String>, Intern<String>)> {
     let mut cities = VecDeque::new();
     cities.extend(journey);
     let mut result = Vec::new();
 
     while cities.len() > 1 {
-        let first = cities.pop_front().unwrap();
-        let second = cities.front().unwrap();
-        result.push([first, *second]);
+        let first = cities.pop_front().expect("Missing city in city pairs");
+        let second = cities.front().expect("Missing city in city pairs");
+        result.push((first, *second));
     }
     result
 }
@@ -117,7 +80,10 @@ fn string_to_map_entry(input: &str) -> (CityKey, i32) {
     (city_key, cost)
 }
 
-fn calculate_cost(city_pairs: &[[Intern<String>; 2]], costs: &AHashMap<CityKey, i32>) -> i32 {
+fn calculate_cost(
+    city_pairs: &[(Intern<String>, Intern<String>)],
+    costs: &AHashMap<CityKey, i32>,
+) -> i32 {
     city_pairs
         .iter()
         .map(|p| {
@@ -133,8 +99,6 @@ fn calculate_cost(city_pairs: &[[Intern<String>; 2]], costs: &AHashMap<CityKey, 
 
 #[cfg(test)]
 mod tests {
-    use std::collections::VecDeque;
-
     use super::*;
 
     #[test]
@@ -149,29 +113,10 @@ mod tests {
             50,
         );
         let city_pairs = vec![
-            [Intern::from_ref("A"), Intern::from_ref("B")],
-            [Intern::from_ref("B"), Intern::from_ref("C")],
+            (Intern::from_ref("A"), Intern::from_ref("B")),
+            (Intern::from_ref("B"), Intern::from_ref("C")),
         ];
         assert_eq!(calculate_cost(&city_pairs, &costs), 80)
-    }
-
-    #[test]
-    fn test_cities_from_city_keys() {
-        let mut costs = AHashMap::new();
-        costs.insert(
-            CityKey::new(Intern::from_ref("A"), Intern::from_ref("B")),
-            30,
-        );
-        costs.insert(
-            CityKey::new(Intern::from_ref("B"), Intern::from_ref("C")),
-            50,
-        );
-        let correct_result = vec![
-            Intern::from_ref("A"),
-            Intern::from_ref("B"),
-            Intern::from_ref("C"),
-        ];
-        assert_eq!(cities_from_city_keys(&costs), correct_result)
     }
 
     #[test]
@@ -179,20 +124,6 @@ mod tests {
         let city_key = CityKey::new(Intern::from_ref("A"), Intern::from_ref("B"));
         let input = "A B 80";
         assert_eq!(string_to_map_entry(input), (city_key, 80))
-    }
-
-    #[test]
-    fn test_vecdeque() {
-        let mut vd = VecDeque::from([1, 2, 3, 4, 5]);
-        let correct_result = vec![[1, 2], [2, 3], [3, 4], [4, 5]];
-        let mut result = Vec::new();
-
-        while vd.len() > 1 {
-            let first = vd.pop_front().unwrap();
-            let second = vd.front().unwrap().clone();
-            result.push([first, second]);
-        }
-        assert_eq!(result, correct_result)
     }
 
     #[test]
@@ -205,10 +136,10 @@ mod tests {
             Intern::from_ref("E"),
         ];
         let correct_result = vec![
-            [Intern::from_ref("A"), Intern::from_ref("B")],
-            [Intern::from_ref("B"), Intern::from_ref("C")],
-            [Intern::from_ref("C"), Intern::from_ref("D")],
-            [Intern::from_ref("D"), Intern::from_ref("E")],
+            (Intern::from_ref("A"), Intern::from_ref("B")),
+            (Intern::from_ref("B"), Intern::from_ref("C")),
+            (Intern::from_ref("C"), Intern::from_ref("D")),
+            (Intern::from_ref("D"), Intern::from_ref("E")),
         ];
         assert_eq!(journey_to_city_pairs(&journey), correct_result)
     }
