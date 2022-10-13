@@ -1,3 +1,4 @@
+mod citykey;
 mod permutation;
 
 use std::{
@@ -7,15 +8,16 @@ use std::{
     io::{BufRead, BufReader},
 };
 
+use crate::citykey::{cities_from_city_keys, CityKey};
 use crate::permutation::Permutations;
 
 fn main() {
     let costs = load_costs_from_file();
-
     let cities = cities_from_city_keys(&costs);
     let permutations = Permutations::new(&cities);
     let mut cheapest_journeys = Vec::new();
     let mut lowest_cost = i32::MAX;
+
     for journey in permutations {
         let city_pairs = journey_to_city_pairs(&journey);
         let current_cost = calculate_cost(&city_pairs, &costs);
@@ -37,56 +39,17 @@ fn main() {
 
 fn load_costs_from_file() -> HashMap<CityKey, i32> {
     let mut costs = HashMap::new();
-
-    let city_data = File::open("cities.txt").unwrap();
+    let city_data = match File::open("cities.txt") {
+        Ok(data) => data,
+        Err(err) => panic!("{}", err),
+    };
     let buf_reader = BufReader::new(city_data);
 
-    for line in buf_reader.lines() {
-        let map_input = string_to_map_entry(&line.unwrap());
+    for line in buf_reader.lines().flatten() {
+        let map_input = string_to_map_entry(&line);
         costs.insert(map_input.0, map_input.1);
     }
     costs
-}
-
-#[derive(Hash, PartialEq, Eq, Debug)]
-struct CityKey {
-    start: String,
-    end: String,
-}
-
-impl CityKey {
-    fn new(start: &str, end: &str) -> Self {
-        CityKey {
-            start: start.into(),
-            end: end.into(),
-        }
-    }
-
-    fn from(city_pair: &[&str]) -> Self {
-        CityKey {
-            start: city_pair[0].into(),
-            end: city_pair[1].into(),
-        }
-    }
-
-    fn reverse_key(&mut self) -> Self {
-        CityKey {
-            start: self.end.clone(),
-            end: self.start.clone(),
-        }
-    }
-}
-
-fn cities_from_city_keys<'a>(costs: &'a HashMap<CityKey, i32>) -> Vec<&'a str> {
-    let city_keys = costs.keys().collect::<Vec<&CityKey>>();
-    let mut cities = city_keys
-        .iter()
-        .map(|k| [k.start.as_str(), k.end.as_str()])
-        .flatten()
-        .collect::<Vec<&str>>();
-    cities.sort();
-    cities.dedup();
-    cities
 }
 
 fn journey_to_city_pairs<'a>(journey: &[&'a str]) -> Vec<[&'a str; 2]> {
@@ -131,8 +94,6 @@ fn calculate_cost(city_pairs: &[[&str; 2]], costs: &HashMap<CityKey, i32>) -> i3
 
 #[cfg(test)]
 mod tests {
-    use std::collections::VecDeque;
-
     use super::*;
 
     #[test]
@@ -145,33 +106,10 @@ mod tests {
     }
 
     #[test]
-    fn test_cities_from_city_keys() {
-        let mut costs = HashMap::new();
-        costs.insert(CityKey::new("A", "B"), 30);
-        costs.insert(CityKey::new("B", "C"), 50);
-        let correct_result = vec!["A", "B", "C"];
-        assert_eq!(cities_from_city_keys(&costs), correct_result)
-    }
-
-    #[test]
     fn test_string_to_map_entry() {
         let city_key = CityKey::new("A", "B");
         let input = "A B 80";
         assert_eq!(string_to_map_entry(input), (city_key, 80))
-    }
-
-    #[test]
-    fn test_vecdeque() {
-        let mut vd = VecDeque::from([1, 2, 3, 4, 5]);
-        let correct_result = vec![[1, 2], [2, 3], [3, 4], [4, 5]];
-        let mut result = Vec::new();
-
-        while vd.len() > 1 {
-            let first = vd.pop_front().unwrap();
-            let second = vd.front().unwrap().clone();
-            result.push([first, second]);
-        }
-        assert_eq!(result, correct_result)
     }
 
     #[test]
