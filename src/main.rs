@@ -7,8 +7,8 @@ use std::{
     io::{BufRead, BufReader},
 };
 
+use ahash::AHashMap;
 use internment::Intern;
-use rustc_hash::FxHashMap;
 
 use crate::permutation::Permutations;
 
@@ -38,8 +38,8 @@ fn main() {
     );
 }
 
-fn load_costs_from_file() -> FxHashMap<CityKey, i32> {
-    let mut costs = FxHashMap::default();
+fn load_costs_from_file() -> AHashMap<CityKey, i32> {
+    let mut costs = AHashMap::new();
 
     let city_data = File::open("cities.txt").unwrap();
     let buf_reader = BufReader::new(city_data);
@@ -80,7 +80,7 @@ impl CityKey {
     }
 }
 
-fn cities_from_city_keys<'a>(costs: &'a FxHashMap<CityKey, i32>) -> Vec<&'a str> {
+fn cities_from_city_keys<'a>(costs: &'a AHashMap<CityKey, i32>) -> Vec<&'a str> {
     let city_keys = costs.keys().collect::<Vec<&CityKey>>();
     let mut cities = city_keys
         .iter()
@@ -118,7 +118,7 @@ fn string_to_map_entry(input: &str) -> (CityKey, i32) {
     (city_key, cost)
 }
 
-fn calculate_cost(city_pairs: &[[&str; 2]], costs: &FxHashMap<CityKey, i32>) -> i32 {
+fn calculate_cost(city_pairs: &[[&str; 2]], costs: &AHashMap<CityKey, i32>) -> i32 {
     city_pairs
         .iter()
         .map(|p| {
@@ -140,7 +140,7 @@ mod tests {
 
     #[test]
     fn test_calculate_cost() {
-        let mut costs = FxHashMap::default();
+        let mut costs = AHashMap::new();
         costs.insert(CityKey::new("A", "B"), 30);
         costs.insert(CityKey::new("B", "C"), 50);
         let city_pairs = vec![["A", "B"], ["B", "C"]];
@@ -149,7 +149,7 @@ mod tests {
 
     #[test]
     fn test_cities_from_city_keys() {
-        let mut costs = FxHashMap::default();
+        let mut costs = AHashMap::new();
         costs.insert(CityKey::new("A", "B"), 30);
         costs.insert(CityKey::new("B", "C"), 50);
         let correct_result = vec!["A", "B", "C"];
