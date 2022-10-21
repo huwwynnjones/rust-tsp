@@ -21,6 +21,8 @@ fn main() {
     let mut cheapest_journeys = Vec::new();
     let mut lowest_cost = i32::MAX;
 
+    println!("Number of permutations {}", factorial(cities.len() as i64));
+
     for journey in permutations {
         let city_pairs = journey_to_city_pairs(&journey);
         let current_cost = calculate_cost(&city_pairs, &costs);
@@ -97,6 +99,10 @@ fn calculate_cost(
         .sum()
 }
 
+fn factorial(number: i64) -> i64 {
+    (1..=number).fold(1, |acc, x| acc * x)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -142,5 +148,14 @@ mod tests {
             (Intern::from_ref("D"), Intern::from_ref("E")),
         ];
         assert_eq!(journey_to_city_pairs(&journey), correct_result)
+    }
+
+    #[test]
+    fn test_factorial() {
+        assert_eq!(factorial(1), 1);
+        assert_eq!(factorial(2), 2);
+        assert_eq!(factorial(3), 6);
+        assert_eq!(factorial(5), 120);
+        assert_eq!(factorial(0), 1);
     }
 }
