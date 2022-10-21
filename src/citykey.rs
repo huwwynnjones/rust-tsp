@@ -1,10 +1,9 @@
-use ahash::AHashMap;
 use internment::Intern;
 
 #[derive(Hash, PartialEq, Eq, Debug)]
 pub struct CityKey {
-    start: Intern<String>,
-    end: Intern<String>,
+    pub start: Intern<String>,
+    pub end: Intern<String>,
 }
 
 impl CityKey {
@@ -24,40 +23,5 @@ impl CityKey {
             start: self.end,
             end: self.start,
         }
-    }
-}
-
-pub fn cities_from_city_keys(costs: &AHashMap<CityKey, i32>) -> Vec<Intern<String>> {
-    let city_keys = costs.keys().collect::<Vec<&CityKey>>();
-    let mut cities = city_keys
-        .iter()
-        .flat_map(|k| [k.start, k.end])
-        .collect::<Vec<Intern<String>>>();
-    cities.sort();
-    cities.dedup();
-    cities
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_cities_from_city_keys() {
-        let mut costs = AHashMap::new();
-        costs.insert(
-            CityKey::new(Intern::from_ref("A"), Intern::from_ref("B")),
-            30,
-        );
-        costs.insert(
-            CityKey::new(Intern::from_ref("B"), Intern::from_ref("C")),
-            50,
-        );
-        let correct_result = vec![
-            Intern::from_ref("A"),
-            Intern::from_ref("B"),
-            Intern::from_ref("C"),
-        ];
-        assert_eq!(cities_from_city_keys(&costs), correct_result)
     }
 }
