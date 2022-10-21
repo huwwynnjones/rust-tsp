@@ -1,11 +1,11 @@
 mod citykey;
-mod permutation;
+mod permutations;
 mod util;
 
 use std::cmp::Ordering;
 
 use crate::{
-    permutation::Permutations,
+    permutations::Permutations,
     util::{
         calculate_cost, cities_from_city_keys, factorial, journey_to_city_pairs,
         load_costs_from_file,
