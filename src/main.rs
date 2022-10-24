@@ -13,7 +13,10 @@ use crate::{
 };
 
 fn main() {
-    let costs = load_costs_from_file();
+    let costs = match load_costs_from_file("cities.txt") {
+        Ok(c) => c,
+        Err(err) => panic!("Unable to load file {}", err),
+    };
     let cities = cities_from_city_keys(&costs);
     let permutations = Permutations::new(&cities);
     let mut cheapest_journeys = Vec::new();

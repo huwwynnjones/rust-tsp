@@ -1,7 +1,7 @@
 use std::{
     collections::VecDeque,
     fs::File,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, Error},
 };
 
 use ahash::AHashMap;
@@ -9,22 +9,22 @@ use internment::Intern;
 
 use crate::citykey::CityKey;
 
-pub fn load_costs_from_file() -> AHashMap<CityKey, i32> {
+pub fn load_costs_from_file(filename: &str) -> Result<AHashMap<CityKey, i32>, Error> {
     let mut costs = AHashMap::new();
-    let city_data = File::open("cities.txt").expect("Failed to open file");
+    let city_data = File::open(filename)?;
     let buf_reader = BufReader::new(city_data);
     for line in buf_reader.lines().flatten() {
         let map_input = string_to_map_entry(&line);
         costs.insert(map_input.0, map_input.1);
     }
-    costs
+    Ok(costs)
 }
 
 pub fn cities_from_city_keys(costs: &AHashMap<CityKey, i32>) -> Vec<Intern<String>> {
     let city_keys = costs.keys().collect::<Vec<&CityKey>>();
     let mut cities = city_keys
         .iter()
-        .flat_map(|k| [k.start, k.end])
+        .flat_map(|k| [k.start(), k.end()])
         .collect::<Vec<Intern<String>>>();
     cities.sort();
     cities.dedup();
