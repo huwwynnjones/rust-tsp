@@ -17,7 +17,7 @@ pub fn load_costs_from_file(filename: &str) -> Result<HashMap<CityKey, i32>, Err
     Ok(costs)
 }
 
-pub fn cities_from_city_keys<'a>(costs: &'a HashMap<CityKey, i32>) -> Vec<&'a str> {
+pub fn cities_from_city_keys(costs: &HashMap<CityKey, i32>) -> Vec<&str> {
     let city_keys = costs.keys().collect::<Vec<&CityKey>>();
     let mut cities = city_keys
         .iter()
