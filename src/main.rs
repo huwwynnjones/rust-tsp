@@ -37,6 +37,7 @@ fn main() {
             _ => (),
         }
     }
+
     println!(
         "Lowest cost {}, journeys {:?}",
         lowest_cost, cheapest_journeys

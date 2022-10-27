@@ -58,19 +58,19 @@ pub fn string_to_map_entry(input: &str) -> (CityKey, i32) {
 pub fn calculate_cost(city_pairs: &[[&str; 2]], costs: &HashMap<CityKey, i32>) -> i32 {
     city_pairs
         .iter()
-        .map(|p| {
-            let mut key = CityKey::from(p);
+        .map(|pair| {
+            let mut key = CityKey::from(pair);
             costs.get(&key).unwrap_or_else(|| {
                 costs
                     .get(&key.reverse_key())
-                    .unwrap_or_else(|| panic!("No cost for {:?}", p))
+                    .unwrap_or_else(|| panic!("No cost for {:?}", pair))
             })
         })
         .sum()
 }
 
 pub fn factorial(number: i64) -> i64 {
-    (1..=number).fold(1, |acc, x| acc * x)
+    (1..=number).product()
 }
 
 #[cfg(test)]
