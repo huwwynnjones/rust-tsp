@@ -1,16 +1,15 @@
 use std::{
-    collections::VecDeque,
+    collections::{HashMap, VecDeque},
     fs::File,
     io::{BufRead, BufReader, Error},
 };
 
-use ahash::AHashMap;
 use internment::Intern;
 
 use crate::citykey::CityKey;
 
-pub fn load_costs_from_file(filename: &str) -> Result<AHashMap<CityKey, i32>, Error> {
-    let mut costs = AHashMap::new();
+pub fn load_costs_from_file(filename: &str) -> Result<HashMap<CityKey, i32>, Error> {
+    let mut costs = HashMap::new();
     let city_data = File::open(filename)?;
     let buf_reader = BufReader::new(city_data);
     for line in buf_reader.lines().flatten() {
@@ -20,7 +19,7 @@ pub fn load_costs_from_file(filename: &str) -> Result<AHashMap<CityKey, i32>, Er
     Ok(costs)
 }
 
-pub fn cities_from_city_keys(costs: &AHashMap<CityKey, i32>) -> Vec<Intern<String>> {
+pub fn cities_from_city_keys(costs: &HashMap<CityKey, i32>) -> Vec<Intern<String>> {
     let city_keys = costs.keys().collect::<Vec<&CityKey>>();
     let mut cities = city_keys
         .iter()
@@ -61,7 +60,7 @@ pub fn string_to_map_entry(input: &str) -> (CityKey, i32) {
 
 pub fn calculate_cost(
     city_pairs: &[(Intern<String>, Intern<String>)],
-    costs: &AHashMap<CityKey, i32>,
+    costs: &HashMap<CityKey, i32>,
 ) -> i32 {
     city_pairs
         .iter()
@@ -86,7 +85,7 @@ mod tests {
 
     #[test]
     fn test_cities_from_city_keys() {
-        let mut costs = AHashMap::new();
+        let mut costs = HashMap::new();
         costs.insert(
             CityKey::new(Intern::from_ref("A"), Intern::from_ref("B")),
             30,
@@ -105,7 +104,7 @@ mod tests {
 
     #[test]
     fn test_calculate_cost() {
-        let mut costs = AHashMap::new();
+        let mut costs = HashMap::new();
         costs.insert(
             CityKey::new(Intern::from_ref("A"), Intern::from_ref("B")),
             30,
