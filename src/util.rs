@@ -33,7 +33,6 @@ pub fn journey_to_city_pairs<'a>(journey: &[&'a str]) -> Vec<[&'a str; 2]> {
     let mut cities = VecDeque::new();
     cities.extend(journey);
     let mut result = Vec::new();
-
     while cities.len() > 1 {
         let first = cities.pop_front().unwrap();
         let second = cities.front().unwrap();
