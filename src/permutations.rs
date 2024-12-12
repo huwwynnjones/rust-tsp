@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Permutations<T: Clone> {
     a: Vec<T>,
     n: usize,
